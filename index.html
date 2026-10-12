@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SheCare">
+<meta name="theme-color" content="#E91E8C">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+<title>SheCare · 她的健康日记</title>
+</head>
+<body>
+<div id="app">
+  <!-- 启动页 -->
+  <div id="splash" class="splash">
+    <div class="splash-icon">🌸</div>
+    <h1>SheCare</h1>
+    <p>她的健康日记</p>
+  </div>
+
+  <!-- 主界面 -->
+  <div id="main" class="main hidden">
+    <!-- 顶部状态栏 -->
+    <header class="header">
+      <div class="header-left">
+        <span class="greeting" id="greeting">早上好</span>
+        <span class="date-display" id="headerDate"></span>
+      </div>
+      <button class="header-btn" onclick="showPage('assistant')">💬</button>
+    </header>
+
+    <!-- 周期状态卡片 -->
+    <div class="cycle-card" id="cycleCard">
+      <div class="cycle-phase">
+        <div class="phase-icon" id="phaseIcon">🌸</div>
+        <div class="phase-info">
+          <div class="phase-name" id="phaseName">月经期</div>
+          <div class="phase-day" id="phaseDay">周期第 1 天</div>
+        </div>
+      </div>
+      <div class="cycle-tip" id="cycleTip">今天身体需要更多休息和温暖</div>
+      <div class="cycle-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="cycleProgress"></div>
+        </div>
+        <div class="progress-labels">
+          <span>月经</span><span>卵泡</span><span>排卵</span><span>黄体</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 今日建议 -->
+    <div class="section">
+      <div class="section-title">
+        <span>💡 今日建议</span>
+      </div>
+      <div class="tips-scroll" id="todayTips"></div>
+    </div>
+
+    <!-- 快速记录 -->
+    <div class="section">
+      <div class="section-title">
+        <span>⚡ 快速记录</span>
+      </div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="showPage('diet')">
+          <span class="quick-icon">🍽️</span>
+          <span>饮食</span>
+        </button>
+        <button class="quick-btn" onclick="showPage('exercise')">
+          <span class="quick-icon">🏃‍♀️</span>
+          <span>运动</span>
+        </button>
+        <button class="quick-btn" onclick="showPage('mood')">
+          <span class="quick-icon">😴</span>
+          <span>睡眠</span>
+        </button>
+        <button class="quick-btn" onclick="showPage('mood')">
+          <span class="quick-icon">😊</span>
+          <span>情绪</span>
+        </button>
+        <button class="quick-btn" onclick="showPage('period')">
+          <span class="quick-icon">🩸</span>
+          <span>姨妈</span>
+        </button>
+        <button class="quick-btn" onclick="showPage('body')">
+          <span class="quick-icon">⚖️</span>
+          <span>体重</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 今日概览 -->
+    <div class="section">
+      <div class="section-title">
+        <span>📊 今日概览</span>
+      </div>
+      <div class="overview-grid" id="overviewGrid"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 周期页 ==================== -->
+  <div id="page-period" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>周期追踪</h2>
+      <button class="edit-btn" onclick="togglePeriodEdit()">编辑</button>
+    </header>
+    <div class="page-content">
+      <!-- 周期日历 -->
+      <div class="cycle-calendar">
+        <div class="calendar-header">
+          <button onclick="changeMonth(-1)">‹</button>
+          <span id="calendarMonth"></span>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="calendar-grid">
+          <div class="calendar-weekday">一</div>
+          <div class="calendar-weekday">二</div>
+          <div class="calendar-weekday">三</div>
+          <div class="calendar-weekday">四</div>
+          <div class="calendar-weekday">五</div>
+          <div class="calendar-weekday">六</div>
+          <div class="calendar-weekday">日</div>
+        </div>
+        <div class="calendar-days" id="calendarDays"></div>
+      </div>
+
+      <!-- 周期信息 -->
+      <div class="cycle-info-cards">
+        <div class="info-card">
+          <div class="info-label">当前阶段</div>
+          <div class="info-value" id="currentPhase">月经期</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">周期天数</div>
+          <div class="info-value" id="cycleLength">28天</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">下次月经</div>
+          <div class="info-value" id="nextPeriod">--</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">预测准确度</div>
+          <div class="info-value" id="accuracy">高</div>
+        </div>
+      </div>
+
+      <!-- 阶段说明 -->
+      <div class="phase-details">
+        <h3>你的身体现在</h3>
+        <div class="phase-card" id="phaseDetailCard">
+          <div class="phase-header">
+            <span class="phase-emoji" id="detailPhaseEmoji">🌸</span>
+            <div>
+              <div class="phase-title" id="detailPhaseName">月经期</div>
+              <div class="phase-subtitle" id="detailPhaseDays">第1-5天</div>
+            </div>
+          </div>
+          <div class="phase-desc" id="detailPhaseDesc"></div>
+          <div class="phase-exercises" id="detailPhaseExercises"></div>
+          <div class="phase-foods" id="detailPhaseFoods"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 饮食页 ==================== -->
+  <div id="page-diet" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>饮食记录</h2>
+      <button class="edit-btn" onclick="showDietAdd()">+ 添加</button>
+    </header>
+    <div class="page-content">
+      <!-- 饮食阶段建议 -->
+      <div class="diet-advice" id="dietAdvice">
+        <div class="advice-icon">🥗</div>
+        <div class="advice-text">
+          <strong>今日饮食建议</strong>
+          <p id="dietAdviceText">多摄入富含铁的食物，补充流失的营养</p>
+        </div>
+      </div>
+
+      <!-- 今日饮食 -->
+      <div class="section">
+        <div class="section-title"><span>今日饮食</span></div>
+        <div class="meal-timeline" id="mealTimeline"></div>
+      </div>
+
+      <!-- 营养统计 -->
+      <div class="section">
+        <div class="section-title"><span>营养统计</span></div>
+        <div class="nutrition-bars" id="nutritionBars"></div>
+      </div>
+
+      <!-- 食品预警 -->
+      <div class="section">
+        <div class="section-title"><span>⚠️ 食品预警</span></div>
+        <div class="food-warnings" id="foodWarnings"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 运动页 ==================== -->
+  <div id="page-exercise" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>运动打卡</h2>
+    </header>
+    <div class="page-content">
+      <!-- 阶段运动推荐 -->
+      <div class="exercise-recommend" id="exerciseRecommend">
+        <div class="recommend-icon">🧘‍♀️</div>
+        <div class="recommend-text">
+          <strong>今日推荐运动</strong>
+          <p id="exerciseRecommendText">瑜伽 · 舒缓拉伸</p>
+          <div class="recommend-tag" id="exerciseIntensity">强度：低</div>
+        </div>
+      </div>
+
+      <!-- 运动打卡 -->
+      <div class="section">
+        <div class="section-title"><span>运动记录</span></div>
+        <div class="exercise-types" id="exerciseTypes"></div>
+      </div>
+
+      <!-- 本周运动 -->
+      <div class="section">
+        <div class="section-title"><span>本周运动</span></div>
+        <div class="week-exercise" id="weekExercise"></div>
+      </div>
+
+      <!-- 抗炎训练 -->
+      <div class="section">
+        <div class="section-title"><span>🔥 抗炎训练</span></div>
+        <div class="anti-inflammatory" id="antiInflammatory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 睡眠情绪页 ==================== -->
+  <div id="page-mood" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>睡眠 & 情绪</h2>
+    </header>
+    <div class="page-content">
+      <!-- 睡眠记录 -->
+      <div class="section">
+        <div class="section-title"><span>🌙 睡眠记录</span></div>
+        <div class="sleep-input">
+          <div class="input-group">
+            <label>入睡时间</label>
+            <input type="time" id="sleepStart" value="23:00">
+          </div>
+          <div class="input-group">
+            <label>起床时间</label>
+            <input type="time" id="sleepEnd" value="07:00">
+          </div>
+          <div class="sleep-quality">
+            <label>睡眠质量</label>
+            <div class="quality-options">
+              <button class="quality-btn" data-quality="1" onclick="setSleepQuality(1)">😴</button>
+              <button class="quality-btn" data-quality="2" onclick="setSleepQuality(2)">😪</button>
+              <button class="quality-btn" data-quality="3" onclick="setSleepQuality(3)">😐</button>
+              <button class="quality-btn" data-quality="4" onclick="setSleepQuality(4)">😊</button>
+              <button class="quality-btn" data-quality="5" onclick="setSleepQuality(5)">🥰</button>
+            </div>
+          </div>
+          <button class="save-btn" onclick="saveSleep()">保存睡眠</button>
+        </div>
+      </div>
+
+      <!-- 情绪记录 -->
+      <div class="section">
+        <div class="section-title"><span>😊 今日情绪</span></div>
+        <div class="mood-selector">
+          <div class="mood-options" id="moodOptions"></div>
+          <textarea class="mood-note" id="moodNote" placeholder="今天感觉如何？想说点什么..."></textarea>
+          <button class="save-btn" onclick="saveMood()">保存情绪</button>
+        </div>
+      </div>
+
+      <!-- 情绪趋势 -->
+      <div class="section">
+        <div class="section-title"><span>📈 情绪趋势</span></div>
+        <div class="mood-chart" id="moodChart"></div>
+      </div>
+
+      <!-- 社区日记 -->
+      <div class="section">
+        <div class="section-title">
+          <span>💬 社区日记</span>
+          <button class="see-all" onclick="showPage('community')">查看全部</button>
+        </div>
+        <div class="community-preview" id="communityPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 身体数据页 ==================== -->
+  <div id="page-body" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>身体数据</h2>
+    </header>
+    <div class="page-content">
+      <!-- 体重 -->
+      <div class="section">
+        <div class="section-title"><span>⚖️ 体重</span></div>
+        <div class="weight-input">
+          <input type="number" id="weightInput" step="0.1" placeholder="0.0" inputmode="decimal">
+          <span class="unit">kg</span>
+          <button class="save-btn inline" onclick="saveWeight()">保存</button>
+        </div>
+        <div class="weight-trend" id="weightTrend"></div>
+        <div class="weight-chart-container">
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 姨妈记录 -->
+      <div class="section">
+        <div class="section-title"><span>🩸 姨妈记录</span></div>
+        <div class="period-record">
+          <div class="period-toggle">
+            <span>今天来姨妈了吗？</span>
+            <input type="checkbox" class="toggle" id="periodToggle" onchange="togglePeriodRecord()">
+          </div>
+          <div class="period-flow hidden" id="periodFlowSection">
+            <label>流量</label>
+            <div class="flow-options">
+              <button onclick="setFlow(this, 'light')">少量</button>
+              <button onclick="setFlow(this, 'medium')">中等</button>
+              <button onclick="setFlow(this, 'heavy')">大量</button>
+            </div>
+          </div>
+          <div class="period-symptoms">
+            <label>症状（可多选）</label>
+            <div class="symptom-chips">
+              <button class="chip" onclick="toggleSymptom(this, 'cramp')">腹痛</button>
+              <button class="chip" onclick="toggleSymptom(this, 'headache')">头痛</button>
+              <button class="chip" onclick="toggleSymptom(this, 'bloat')">腹胀</button>
+              <button class="chip" onclick="toggleSymptom(this, 'acne')">痘痘</button>
+              <button class="chip" onclick="toggleSymptom(this, 'tender')">胸胀</button>
+              <button class="chip" onclick="toggleSymptom(this, 'fatigue')">疲倦</button>
+            </div>
+          </div>
+          <button class="save-btn" onclick="savePeriod()">保存记录</button>
+        </div>
+      </div>
+
+      <!-- 排便记录 -->
+      <div class="section">
+        <div class="section-title"><span>💩 排便</span></div>
+        <div class="poop-record">
+          <div class="poop-types">
+            <div class="poop-btn" onclick="setPoop(this, 'hard')">
+              <span>🪨</span><small>硬</small>
+            </div>
+            <div class="poop-btn" onclick="setPoop(this, 'lumpy')">
+              <span>🌰</span><small>坑洼</small>
+            </div>
+            <div class="poop-btn" onclick="setPoop(this, 'normal')">
+              <span>🍌</span><small>正常</small>
+            </div>
+            <div class="poop-btn" onclick="setPoop(this, 'soft')">
+              <span>🍦</span><small>软</small>
+            </div>
+          </div>
+          <div class="poop-count">
+            <button onclick="changePoopCount(-1)">−</button>
+            <span id="poopCount">0</span> 次
+            <button onclick="changePoopCount(1)">+</button>
+          </div>
+          <button class="save-btn" onclick="savePoop()">保存记录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 社区页 ==================== -->
+  <div id="page-community" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>社区日记</h2>
+      <button class="edit-btn" onclick="showDiaryAdd()">写日记</button>
+    </header>
+    <div class="page-content">
+      <div class="community-feed" id="communityFeed"></div>
+    </div>
+  </div>
+
+  <!-- ==================== AI助手页 ==================== -->
+  <div id="page-assistant" class="page hidden">
+    <header class="page-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <h2>AI 健康助手</h2>
+    </header>
+    <div class="page-content">
+      <div class="assistant-container">
+        <div class="assistant-messages" id="assistantMessages"></div>
+        <div class="quick-questions" id="quickQuestions"></div>
+        <div class="assistant-input">
+          <input type="text" id="assistantInput" placeholder="问我任何关于健康的问题...">
+          <button onclick="sendToAssistant()">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 饮食添加弹窗 ==================== -->
+  <div id="modal-diet-add" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>添加饮食</h3>
+        <button onclick="closeModal('modal-diet-add')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>餐次</label>
+          <div class="meal-type-btns">
+            <button class="meal-btn active" onclick="setMealType(this, 'breakfast')">早餐</button>
+            <button class="meal-btn" onclick="setMealType(this, 'lunch')">午餐</button>
+            <button class="meal-btn" onclick="setMealType(this, 'dinner')">晚餐</button>
+            <button class="meal-btn" onclick="setMealType(this, 'snack')">加餐</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>吃了什么</label>
+          <textarea id="foodInput" placeholder="描述你吃的食物..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>是否为加工食品</label>
+          <div class="food-type-btns">
+            <button class="food-type-btn active" onclick="setFoodType(this, false)">天然食物</button>
+            <button class="food-type-btn" onclick="setFoodType(this, true)">加工食品</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>份量</label>
+          <div class="portion-btns">
+            <button class="portion-btn" onclick="setPortion(this, 'small')">少量</button>
+            <button class="portion-btn active" onclick="setPortion(this, 'medium')">适中</button>
+            <button class="portion-btn" onclick="setPortion(this, 'large')">大量</button>
+          </div>
+        </div>
+        <button class="save-btn full" onclick="saveMeal()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 日记添加弹窗 ==================== -->
+  <div id="modal-diary-add" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>写日记</h3>
+        <button onclick="closeModal('modal-diary-add')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>今天的身体感受</label>
+          <div class="feeling-chips">
+            <button class="chip" onclick="toggleFeeling(this, 'energetic')">充满活力</button>
+            <button class="chip" onclick="toggleFeeling(this, 'tired')">疲倦</button>
+            <button class="chip" onclick="toggleFeeling(this, 'happy')">开心</button>
+            <button class="chip" onclick="toggleFeeling(this, 'anxious')">焦虑</button>
+            <button class="chip" onclick="toggleFeeling(this, 'calm')">平静</button>
+            <button class="chip" onclick="toggleFeeling(this, 'sore')">酸痛</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>想说的话</label>
+          <textarea id="diaryContent" placeholder="记录下今天的感受，和同频的人分享..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>是否公开到社区</label>
+          <div class="privacy-btns">
+            <button class="privacy-btn active" onclick="setPrivacy(this, true)">公开</button>
+            <button class="privacy-btn" onclick="setPrivacy(this, false)">私密</button>
+          </div>
+        </div>
+        <button class="save-btn full" onclick="saveDiary()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" onclick="showPage('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">首页</span>
+    </button>
+    <button class="nav-item" onclick="showPage('period')">
+      <span class="nav-icon">🌙</span>
+      <span class="nav-label">周期</span>
+    </button>
+    <button class="nav-item" onclick="showPage('diet')">
+      <span class="nav-icon">🍽️</span>
+      <span class="nav-label">饮食</span>
+    </button>
+    <button class="nav-item" onclick="showPage('exercise')">
+      <span class="nav-icon">🏃‍♀️</span>
+      <span class="nav-label">运动</span>
+    </button>
+    <button class="nav-item" onclick="showPage('assistant')">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">助手</span>
+    </button>
+  </nav>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

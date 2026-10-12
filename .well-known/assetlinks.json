@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.shecare.app",
+    "sha256_cert_fingerprints": ["c9c2c020e2708b71882fcea3132bf747fda92ec42db78f429733743b4806609a"]
+  }
+}]
